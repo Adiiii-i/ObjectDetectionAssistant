@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Real-Time Camera Object Detection Assistant
 ==========================================
@@ -36,19 +35,18 @@ class ObjectDetectionAssistant:
         self.model = None
         self.cap = None
         self.voice_engine = None
-        self.detection_memory = {}  # Store last detection time for each object
-        self.memory_duration = 10  # Seconds to remember an object
+        self.detection_memory = {}  
+        self.memory_duration = 10  
         self.voice_queue = queue.Queue()
         self.is_running = False
         self.charger_alert_cooldown = 0
-        self.charger_alert_duration = 5  # Seconds between charger alerts
+        self.charger_alert_duration = 5 
         
         # Initialize components
         self._initialize_model()
         self._initialize_voice()
         self._initialize_camera()
-        
-        # Start voice processing thread
+    
         self.voice_thread = threading.Thread(target=self._voice_worker, daemon=True)
         self.voice_thread.start()
     
@@ -56,7 +54,7 @@ class ObjectDetectionAssistant:
         """Initialize YOLOv8 model for object detection."""
         try:
             print("🔄 Loading YOLOv8 model...")
-            self.model = YOLO('yolov8n.pt')  # Use nano model for speed
+            self.model = YOLO('yolov8n.pt')  
             print("✅ YOLOv8 model loaded successfully!")
         except Exception as e:
             print(f"❌ Error loading model: {e}")
@@ -68,12 +66,12 @@ class ObjectDetectionAssistant:
         """Initialize text-to-speech engine."""
         try:
             self.voice_engine = pyttsx3.init()
-            # Configure voice settings
+           
             voices = self.voice_engine.getProperty('voices')
             if voices:
-                self.voice_engine.setProperty('voice', voices[0].id)  # Use first available voice
-            self.voice_engine.setProperty('rate', 150)  # Speed of speech
-            self.voice_engine.setProperty('volume', 0.8)  # Volume level
+                self.voice_engine.setProperty('voice', voices[0].id) 
+            self.voice_engine.setProperty('rate', 150)  
+            self.voice_engine.setProperty('volume', 0.8) 
             print("✅ Voice engine initialized!")
         except Exception as e:
             print(f"⚠️  Voice initialization failed: {e}")
@@ -86,7 +84,7 @@ class ObjectDetectionAssistant:
             if not self.cap.isOpened():
                 raise Exception("Could not open camera")
             
-            # Set camera properties for better performance
+            
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
             self.cap.set(cv2.CAP_PROP_FPS, 30)
@@ -131,19 +129,18 @@ class ObjectDetectionAssistant:
         if current_time - self.charger_alert_cooldown > self.charger_alert_duration:
             self.charger_alert_cooldown = current_time
             
-            # Add visual alert
+            
             cv2.putText(frame, "🔌 CHARGER DETECTED!", (50, 50), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
             
-            # Add audio alert (if available)
+            
             try:
-                # Try to play a sound file (you can add your own .wav file)
-                # playsound("alert.wav")  # Uncomment if you have an alert sound
+               
                 pass
             except:
                 pass
             
-            # Add voice announcement
+    
             if self.voice_engine:
                 self.voice_queue.put("Charger detected! Please connect your device.")
     
@@ -157,63 +154,63 @@ class ObjectDetectionAssistant:
                     x1, y1, x2, y2 = box.xyxy[0]
                     x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                     
-                    # Get confidence and class
+                  
                     conf = float(box.conf[0])
                     cls = int(box.cls[0])
                     class_name = result.names[cls]
                     
-                    # Determine color based on confidence
+                   
                     if conf > 0.8:
-                        color = (0, 255, 0)  # Green for high confidence
+                        color = (0, 255, 0)  
                     elif conf > 0.6:
-                        color = (0, 255, 255)  # Yellow for medium confidence
+                        color = (0, 255, 255)  
                     else:
-                        color = (0, 0, 255)  # Red for low confidence
+                        color = (0, 0, 255)  
                     
-                    # Draw bounding box
+                  
                     cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                     
-                    # Create label with confidence
+                  
                     label = f"{class_name}: {conf:.2f}"
                     
-                    # Get label size for background
+                    
                     (label_width, label_height), _ = cv2.getTextSize(
                         label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2
                     )
                     
-                    # Draw label background
+                   
                     cv2.rectangle(frame, (x1, y1 - label_height - 10), 
                                 (x1 + label_width, y1), color, -1)
                     
-                    # Draw label text
+                   
                     cv2.putText(frame, label, (x1, y1 - 5), 
                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
                     
-                    # Check if we should speak this object
+                    
                     if self._should_speak(class_name):
                         if self.voice_engine:
                             self.voice_queue.put(f"I see a {class_name}")
                     
-                    # Special handling for charger
+                    
                     if "charger" in class_name.lower() or "cell phone" in class_name.lower():
                         self._handle_charger_detection(frame)
     
     def _add_ui_overlay(self, frame):
         """Add UI elements and status information to the frame."""
-        # Add title
+       
         cv2.putText(frame, "AI Object Detection Assistant", (10, 30), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         
-        # Add instructions
+       
         cv2.putText(frame, "Press 'q' to quit, 's' to speak status", (10, frame.shape[0] - 20), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
         
-        # Add memory status
+      
         memory_count = len(self.detection_memory)
         cv2.putText(frame, f"Objects in memory: {memory_count}", (10, frame.shape[0] - 40), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
         
-        # Add timestamp
+       
         timestamp = datetime.now().strftime("%H:%M:%S")
         cv2.putText(frame, timestamp, (frame.shape[1] - 100, 30), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
@@ -232,30 +229,30 @@ class ObjectDetectionAssistant:
                     print("❌ Failed to read frame from camera")
                     break
                 
-                # Run detection
+               
                 results = self.model(frame, verbose=False)
                 
-                # Draw detections
+                
                 self._draw_detections(frame, results)
                 
-                # Add UI overlay
+                
                 self._add_ui_overlay(frame)
                 
-                # Display the frame
+               
                 cv2.imshow('AI Object Detection Assistant', frame)
                 
-                # Handle key presses
+               
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord('q'):
                     break
                 elif key == ord('s'):
-                    # Speak current status
+                    
                     if self.voice_engine:
                         memory_count = len(self.detection_memory)
                         status_msg = f"Currently tracking {memory_count} objects in memory"
                         self.voice_queue.put(status_msg)
                 
-                # Small delay to prevent excessive CPU usage
+               
                 time.sleep(0.01)
                 
         except KeyboardInterrupt:
