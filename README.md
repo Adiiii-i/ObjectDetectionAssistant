@@ -4,7 +4,7 @@ A **unique and intelligent** real-time camera object detection system that combi
 
 ## ✨ Unique Features
 
-- **🎯 Real-time Detection**: Uses YOLOv8 for lightning-fast object recognition
+- **🎯 Real-time Detection**: Uses YOLOv8 for lightning-fast object recognition with asap detection as well as with indicators 
 - **🗣️ Voice Feedback**: Speaks object names when first detected
 - **🧠 Smart Memory**: Remembers objects to avoid repetitive voice output
 - **🔌 Special Alerts**: Unique charger detection with voice announcements
